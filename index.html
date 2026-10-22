@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Patito IA</title>
+  <style>
+    :root {
+      --bg-1: #fffaf0;
+      --bg-2: #fdf1d7;
+      --bg-3: #e6f7f3;
+      --bg-4: #fce8ef;
+      --card: rgba(255,255,255,0.6);
+      --card-strong: rgba(255,255,255,0.82);
+      --text: #5f4c42;
+      --muted: #7d6d62;
+      --primary: #f6d87f;
+      --primary-strong: #ebba5d;
+      --secondary: #bfeee5;
+      --pink: #f9d5df;
+      --mint: #d7f1ea;
+      --shadow: 0 24px 45px rgba(122, 96, 72, 0.12);
+      --line: rgba(126, 101, 77, 0.1);
+      --success: #68d4a6;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      height: 100%;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 10% 20%, rgba(255,255,255,0.8) 0%, transparent 20%),
+        radial-gradient(circle at 90% 10%, rgba(255,255,255,0.8) 0%, transparent 18%),
+        linear-gradient(135deg, var(--bg-1), var(--bg-2), var(--bg-3), var(--bg-4));
+      overflow: hidden;
+    }
+
+    body {
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+
+    .app {
+      width: min(90vw, 820px);
+      height: min(86vh, 760px);
+      border-radius: 32px;
+      background: rgba(255,255,255,0.25);
+      backdrop-filter: blur(18px);
+      border: 1px solid rgba(255,255,255,0.5);
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .bubble-deco,
+    .bubble-deco-2 {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(8px);
+      opacity: 0.7;
+      z-index: 0;
+    }
+
+    .bubble-deco {
+      width: 230px;
+      height: 230px;
+      background: rgba(252, 224, 146, 0.28);
+      top: -65px;
+      right: -40px;
+    }
+
+    .bubble-deco-2 {
+      width: 200px;
+      height: 200px;
+      background: rgba(174, 231, 221, 0.18);
+      bottom: -30px;
+      left: -35px;
+    }
+
+    .shell {
+      position: relative;
+      z-index: 1;
+      height: 100%;
+      display: grid;
+      grid-template-rows: auto 1fr auto auto;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 22px 16px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255,255,255,0.15);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .duck-logo {
+      width: 74px;
+      height: 74px;
+      border-radius: 22px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, #ffe8a5, #f5d36b);
+      box-shadow: 0 18px 30px rgba(240, 190, 84, 0.28);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .duck-logo::before {
+      content: "";
+      position: absolute;
+      width: 76%;
+      height: 76%;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.22);
+      top: 12%;
+      left: 11%;
+    }
+
+    .duck-logo svg {
+      width: 52px;
+      height: 52px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .brand-text h1 {
+      margin: 0;
+      font-size: 1.35rem;
+      letter-spacing: 0.3px;
+    }
+
+    .brand-text p {
+      margin: 2px 0 0;
+      font-size: 0.72rem;
+      color: var(--muted);
+    }
+
+    .online {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.5);
+      border: 1px solid rgba(88, 129, 112, 0.08);
+      font-size: 0.8rem;
+      color: #4d8a6e;
+      font-weight: 600;
+    }
+
+    .online .dot {
+      width: 10px;
+      height: 10px;
+      background: var(--success);
+      border-radius: 50%;
+      box-shadow: 0 0 0 5px rgba(104, 212, 166, 0.18);
+      animation: pulse 1.8s infinite;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.25); opacity: 0.8; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .chat-area {
+      padding: 18px 18px 8px;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(156,132,111,0.3) transparent;
+    }
+
+    .chat-area::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .chat-area::-webkit-scrollbar-thumb {
+      background: rgba(156,132,111,0.2);
+      border-radius: 999px;
+    }
+
+    .message {
+      display: flex;
+      margin-bottom: 16px;
+      animation: rise .25s ease;
+    }
+
+    .message.user { justify-content: flex-end; }
+    .message.bot { justify-content: flex-start; }
+
+    .bubble {
+      max-width: 76%;
+      padding: 14px 16px;
+      border-radius: 22px;
+      line-height: 1.6;
+      font-size: 0.96rem;
+      box-shadow: 0 10px 24px rgba(130, 109, 88, 0.08);
+      border: 1px solid rgba(128, 103, 76, 0.06);
+    }
+
+    .message.bot .bubble {
+      background: rgba(255,255,255,0.76);
+      border-top-left-radius: 8px;
+      color: var(--text);
+    }
+
+    .message.user .bubble {
+      background: linear-gradient(135deg, #f8e2a3, #f4c86f);
+      border-top-right-radius: 8px;
+      color: #4f3c29;
+      font-weight: 600;
+    }
+
+    .typing {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 8px 10px 10px;
+    }
+
+    .typing span {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: rgba(113, 88, 69, 0.45);
+      animation: blink 1.2s infinite ease-in-out;
+    }
+
+    .typing span:nth-child(2) { animation-delay: .15s; }
+    .typing span:nth-child(3) { animation-delay: .3s; }
+
+    @keyframes blink {
+      0%, 80%, 100% { transform: scale(0.75); opacity: 0.4; }
+      40% { transform: scale(1); opacity: 1; }
+    }
+
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .quick {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      padding: 4px 18px 14px;
+    }
+
+    .chip {
+      border: 1px solid rgba(136, 112, 92, 0.08);
+      background: rgba(255,255,255,0.6);
+      color: var(--text);
+      border-radius: 999px;
+      padding: 9px 12px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+      box-shadow: 0 8px 18px rgba(130, 112, 90, 0.04);
+    }
+
+    .chip:hover {
+      background: rgba(255,255,255,0.85);
+      transform: translateY(-1px);
+      box-shadow: 0 10px 20px rgba(130, 112, 90, 0.08);
+    }
+
+    .composer {
+      display: flex;
+      gap: 12px;
+      padding: 14px 18px 22px;
+      border-top: 1px solid var(--line);
+      background: rgba(255,255,255,0.12);
+    }
+
+    .composer input {
+      flex: 1;
+      border: 1px solid rgba(122, 97, 74, 0.1);
+      background: rgba(255,255,255,0.7);
+      border-radius: 18px;
+      padding: 16px 18px;
+      font-size: 0.98rem;
+      color: var(--text);
+      outline: none;
+      transition: border 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .composer input:focus {
+      border-color: rgba(236, 191, 88, 0.7);
+      box-shadow: 0 0 0 4px rgba(236,191,88,0.15);
+    }
+
+    .send-btn {
+      border: none;
+      background: linear-gradient(135deg, var(--primary), var(--primary-strong));
+      color: #fff;
+      padding: 0 22px;
+      border-radius: 18px;
+      font-size: 0.96rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 12px 22px rgba(240, 186, 82, 0.22);
+      transition: transform 0.2s ease, filter 0.2s ease;
+    }
+
+    .send-btn:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.02);
+    }
+
+    @media (max-width: 620px) {
+      .app {
+        width: min(96vw, 820px);
+        height: min(88vh, 760px);
+      }
+
+      .topbar {
+        padding: 16px 15px 12px;
+      }
+
+      .brand-text h1 {
+        font-size: 1.1rem;
+      }
+
+      .brand-text p {
+        font-size: 0.65rem;
+      }
+
+      .online {
+        display: none;
+      }
+
+      .composer {
+        gap: 8px;
+        padding: 12px 14px 18px;
+      }
+
+      .composer input {
+        padding: 14px 14px;
+      }
+
+      .send-btn {
+        padding: 0 16px;
+      }
+
+      .quick {
+        padding: 0 14px 12px;
+      }
+
+      .bubble {
+        max-width: 84%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="bubble-deco"></div>
+    <div class="bubble-deco-2"></div>
+
+    <div class="shell">
+      <header class="topbar">
+        <div class="brand">
+          <div class="duck-logo" aria-label="Logo de Patito IA">
+            <svg viewBox="0 0 100 100" aria-hidden="true">
+              <ellipse cx="50" cy="57" rx="28" ry="24" fill="#f7d66c" />
+              <circle cx="19" cy="42" r="10" fill="#f7d66c" />
+              <circle cx="81" cy="42" r="10" fill="#f7d66c" />
+              <path d="M13 45 Q8 32 18 28 Q25 21 36 24" fill="#f7d66c"/>
+              <path d="M87 45 Q92 32 82 28 Q75 21 64 24" fill="#f7d66c"/>
+              <ellipse cx="33" cy="51" rx="7" ry="7" fill="#ffffff" />
+              <ellipse cx="67" cy="51" rx="7" ry="7" fill="#ffffff" />
+              <circle cx="34" cy="52" r="2.8" fill="#2b2b2b" />
+              <circle cx="66" cy="52" r="2.8" fill="#2b2b2b" />
+              <path d="M39 62 Q50 70 61 62" stroke="#f0b24d" stroke-width="3" fill="none" stroke-linecap="round"/>
+              <path d="M46 72 Q50 79 54 72" stroke="#f0b24d" stroke-width="3" fill="none" stroke-linecap="round"/>
+              <path d="M25 57 L14 66" stroke="#f0b24d" stroke-width="3" stroke-linecap="round"/>
+              <path d="M75 57 L86 66" stroke="#f0b24d" stroke-width="3" stroke-linecap="round"/>
+              <path d="M39 36 Q50 28 61 36" fill="none" stroke="#fff5be" stroke-width="4" stroke-linecap="round"/>
+            </svg>
+          </div>
+
+          <div class="brand-text">
+            <h1>Patito IA</h1>
+            <p>Tu apoyo dulce y emocional</p>
+          </div>
+        </div>
+
+        <div class="online">
+          <span class="dot"></span>
+          En línea
+        </div>
+      </header>
+
+      <main class="chat-area" id="chat"></main>
+
+      <div class="quick">
+        <button class="chip" data-message="Hoy me siento feliz">Feliz</button>
+        <button class="chip" data-message="Estoy cansado y necesito descansar">Cansado</button>
+        <button class="chip" data-message="Me siento triste hoy">Triste</button>
+        <button class="chip" data-message="Estoy muy motivado y con energía">Motivado</button>
+        <button class="chip" data-message="Me siento ansioso por todo">Ansioso</button>
+      </div>
+
+      <div class="composer">
+        <input id="input" type="text" placeholder="Escribe cómo te sientes hoy..." />
+        <button class="send-btn" id="sendBtn">Enviar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const chat = document.getElementById("chat");
+    const input = document.getElementById("input");
+    const sendBtn = document.getElementById("sendBtn");
+    const chips = document.querySelectorAll(".chip");
+
+    function addMessage(sender, text) {
+      const message = document.createElement("div");
+      message.className = `message ${sender}`;
+      const bubble = document.createElement("div");
+      bubble.className = "bubble";
+      bubble.textContent = text;
+      message.appendChild(bubble);
+      chat.appendChild(message);
+      chat.scrollTop = chat.scrollHeight;
+    }
+
+    function addTyping() {
+      const typing = document.createElement("div");
+      typing.className = "message bot";
+      const bubble = document.createElement("div");
+      bubble.className = "bubble typing";
+      bubble.innerHTML = "<span></span><span></span><span></span>";
+      typing.appendChild(bubble);
+      chat.appendChild(typing);
+      chat.scrollTop = chat.scrollHeight;
+      return typing;
+    }
+
+    function removeTyping(element) {
+      if (element && element.parentNode) {
+        element.parentNode.removeChild(element);
+      }
+    }
+
+    function detectMood(text) {
+      const lower = text.toLowerCase();
+
+      if (/(feliz|alegre|contento|genial|bien|emocionado|motivado|energ)/i.test(lower)) {
+        return "feliz";
+      }
+      if (/(triste|mal|deprim|abatido|solo|llor|angustiado|desanimad|molest|decad|desesperad)/i.test(lower)) {
+        return "triste";
+      }
+      if (/(cansad|agotad|dormir|somnol|fatigad|exhaust|perezos)/i.test(lower)) {
+        return "cansado";
+      }
+      if (/(ansios|nervios|preocupad|estres|miedo|insegur|agitado)/i.test(lower)) {
+        return "ansioso";
+      }
+      if (/(enojad|molest|rabia|furios|irritad)/i.test(lower)) {
+        return "enojado";
+      }
+      if (/(motivad|confianz|segur|optimist|fuerte|luchad)/i.test(lower)) {
+        return "motivado";
+      }
+      return "neutral";
+    }
+
+    function getReply(text) {
+      const mood = detectMood(text);
+
+      const responses = {
+        feliz: [
+          "¡Qué bonito sentirte feliz! Ese tipo de energía vale muchísimo. Aprovecha este momento para seguir cuidando lo que te hace sonreír.",
+          "Me alegra mucho escuchar eso. Cuando te sientes bien, también es una señal de que estás conectando con cosas importantes para ti.",
+          "¡Qué buena vibra! Guarda este sentimiento como un pequeño tesoro para los días que necesites energía."
+        ],
+        triste: [
+          "Entiendo que hoy te sientes así. No hace falta arreglar todo en este momento; a veces basta con parar, respirar y reconocer lo que sientes.",
+          "Si hoy estás triste, te acompaño con calma. Quizá lo más útil sea darte un respiro pequeño y permitirte sentir sin juzgarte.",
+          "No estás solo en eso. Hay días más pesados que otros, y no significa que estés fallando; solo significa que también eres humano."
+        ],
+        cansado: [
+          "Parece que tu energía está baja. A veces lo más importante no es seguir empujando, sino escuchar a tu cuerpo y darte un descanso que te recupere.",
+          "Cuando estás cansado, no hace falta ser fuerte todo el tiempo. Darte permiso para descansar es una decisión sabia.",
+          "Si tu cuerpo pide calma, escúchalo. Un pequeño descanso puede cambiar mucho el resto del día."
+        ],
+        ansioso: [
+          "Puedo sentir que hay algo que te preocupa. Intenta ponerle nombre a lo que te inquieta y enfocarte en lo que sí puedes controlar.",
+          "La ansiedad suele aparecer cuando la mente corre demasiado rápido. Haz una pausa, respira despacio, y vuelve a lo más simple.",
+          "No tienes que resolverlo todo de una vez. Una cosa a la vez te ayudará a calmarte."
+        ],
+        enojado: [
+          "Entiendo que estés molesto. El enojo también es una señal de algo importante que necesita ser escuchado, no ignorado.",
+          "Cuando hay rabia o frustración, da un respiro. Eso te da espacio para elegir cómo responder mejor.",
+          "No te juzgues por sentir enojo; solo intenta canalizarlo de forma que te proteja más que te lastime."
+        ],
+        motivado: [
+          "¡Eso suena genial! La motivación es una energía preciosa. Úsala con calma, sin empujarte demasiado.",
+          "Si te sientes motivado, aprovecha ese impulso para avanzar en algo pequeño pero real. La constancia gana más que la prisa.",
+          "Qué bueno que estés con ganas. Tus pasos pequeños hoy pueden ser el inicio de grandes cosas."
+        ],
+        neutral: [
+          "Gracias por contármelo. A veces solo reconocer lo que sientes ya es un gran paso para cuidar tu bienestar.",
+          "Estoy aquí para escucharte sin presiones. Puedes compartir lo que te está pasando, aunque no tengas palabras perfectas.",
+          "No tienes que explicarlo todo. Hablar de cómo te sientes aunque sea poco a poco ya ayuda mucho."
+        ]
+      };
+
+      return responses[mood][Math.floor(Math.random() * responses[mood].length)];
+    }
+
+    function handleSend() {
+      const text = input.value.trim();
+      if (!text) return;
+
+      addMessage("user", text);
+      input.value = "";
+
+      const typing = addTyping();
+
+      setTimeout(() => {
+        removeTyping(typing);
+        addMessage("bot", getReply(text));
+      }, 700);
+    }
+
+    sendBtn.addEventListener("click", handleSend);
+
+    input.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        handleSend();
+      }
+    });
+
+    chips.forEach(chip => {
+      chip.addEventListener("click", () => {
+        const value = chip.dataset.message;
+        input.value = value;
+        handleSend();
+      });
+    });
+
+    addMessage("bot", "Hola, soy Patito IA. ¿Cómo te sientes hoy? Puedes contarme si estás feliz, triste, cansado, motivado, ansioso o simplemente necesitas hablar.");
+  </script>
+</body>
+</html>
